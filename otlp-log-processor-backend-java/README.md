@@ -13,7 +13,7 @@ with instructions on how to run your application.
 The goal of this assignment is to build a simple backend application that receives [log records](https://opentelemetry.io/docs/concepts/signals/logs/)
 on a gRPC endpoint and processes them. Based on a **configurable attribute key and duration**, the application has to keep
 counts of the number of unique log records per distinct attribute value. And within each window (configurable duration) print /
-log these counts to stdout.
+log these delta counts to stdout.
 Note that the configurable attribute may appear either on Resource, Scope or Log level.
 
 Pseudo example:
