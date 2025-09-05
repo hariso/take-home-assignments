@@ -113,9 +113,10 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 
 	meterProvider := metric.NewMeterProvider(
 		metric.WithResource(res),
-		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// Default is 1m. Set to 10s for demonstrative purposes.
-			metric.WithInterval(10*time.Second))),
+		metric.WithReader(
+			metric.NewPeriodicReader(metricExporter,
+				// Default is 1m. Set to 10s for demonstrative purposes.
+				metric.WithInterval(10*time.Second))),
 	)
 	return meterProvider, nil
 }

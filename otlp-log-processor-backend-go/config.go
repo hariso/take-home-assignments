@@ -37,7 +37,7 @@ var (
 
 // parseConfig parses the app's config and validates the values.
 // todo add validation for all config parameters
-func parseConfig() config {
+func parseConfig() (config, error) {
 	// NB: parseConfig returns a configuration struct,
 	// without the caller having to know how exactly it's parsed.
 	// We can add parsing the config values from files or env. variables easily.
@@ -49,5 +49,5 @@ func parseConfig() config {
 		maxReceiveMessageSize: *maxReceiveMessageSize,
 		attributeKey:          *attributeKey,
 		countWindow:           *countWindow,
-	}
+	}, nil
 }

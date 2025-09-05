@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -44,7 +45,11 @@ func run() (err error) {
 		err = errors.Join(err, otelShutdown(context.Background()))
 	}()
 
-	cfg := parseConfig()
+	cfg, err := parseConfig()
+	if err != nil {
+		printHelp()
+		return nil
+	}
 
 	slog.Debug("Starting listener", slog.String("listenAddr", cfg.listenAddr))
 	listener, err := net.Listen("tcp", cfg.listenAddr)
@@ -62,4 +67,9 @@ func run() (err error) {
 	slog.Debug("Starting gRPC server")
 
 	return grpcServer.Serve(listener)
+}
+
+func printHelp() {
+	// todo pretty print the usage instructions
+	fmt.Println("Usage: ")
 }
