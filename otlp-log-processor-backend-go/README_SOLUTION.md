@@ -13,12 +13,16 @@ Following is needed:
 
 ## Shutdown/startup behavior
 
-This service is responsible for counting records it received, not the records that were sent (for whatever reason). From
-the counting service's point of view, it would make sense to handle shutdown and startup behavior (by pausing counting
-when the service shuts down, and resuming when it starts up).
+This is about handling the counting service's shutdown and start-up, and how it affects counting logs. After the service
+starts, we may choose to continue counting or reset counts to zero.
 
-There are also arguments against handling this behavior, i.e. simply counting from 0 whenever the service is started
-again.
+### Pros
+
+This service is responsible for counting records it received, not the records that were sent (for whatever
+reason). From the counting service's point of view, it would make sense to handle shutdown and startup behavior (by
+pausing counting when the service shuts down, and resuming when it starts up).
+
+### Cons 
 
 It might give the wrong impression that everything is OK. Let's assume the counting window is 10 seconds,
 and the service was down for 7 seconds. If we handle the shutdown, the counting service will show counts for the 3
