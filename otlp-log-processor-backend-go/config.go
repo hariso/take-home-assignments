@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -44,10 +46,26 @@ func parseConfig() (config, error) {
 
 	flag.Parse()
 
-	return config{
+	cfg := config{
 		listenAddr:            *listenAddr,
 		maxReceiveMessageSize: *maxReceiveMessageSize,
 		attributeKey:          *attributeKey,
 		countWindow:           *countWindow,
-	}, nil
+	}
+
+	err := validateConfig(cfg)
+	if err != nil {
+		return config{}, fmt.Errorf("validation error: %w", err)
+	}
+
+	return cfg, nil
+}
+
+func validateConfig(cfg config) error {
+	attrKey := strings.TrimSpace(cfg.attributeKey)
+	if attrKey == "" {
+		return fmt.Errorf("attributeKey is required")
+	}
+
+	return nil
 }

@@ -10,7 +10,8 @@ import (
 )
 
 type logsCounter interface {
-	count([]*v1.ResourceLogs)
+	count(context.Context, []*v1.ResourceLogs)
+	getAndReset() map[any]int64
 }
 
 type countPrinter interface {
@@ -18,22 +19,21 @@ type countPrinter interface {
 }
 
 type dash0LogsServiceServer struct {
-	// addr removed because it was unused
-	attributeKey string
-	countWindow  time.Duration
-	counter      logsCounter
-	printer      countPrinter
+	counter     logsCounter
+	printTicker *time.Ticker
+	printer     countPrinter
 
 	collogspb.UnimplementedLogsServiceServer
 }
 
-func newServer(attributeKey string, countWindow time.Duration) collogspb.LogsServiceServer {
+func newServer(countWindow time.Duration, counter logsCounter, printer countPrinter) collogspb.LogsServiceServer {
 	s := &dash0LogsServiceServer{
-		attributeKey: attributeKey,
-		countWindow:  countWindow,
-		// todo inject as argument to newServer()
-		counter: newInMemoryCounter(),
+		printTicker: time.NewTicker(countWindow),
+		counter:     counter,
+		printer:     printer,
 	}
+
+	go s.startPrinter()
 
 	return s
 }
@@ -41,7 +41,15 @@ func newServer(attributeKey string, countWindow time.Duration) collogspb.LogsSer
 func (s *dash0LogsServiceServer) Export(ctx context.Context, request *collogspb.ExportLogsServiceRequest) (*collogspb.ExportLogsServiceResponse, error) {
 	slog.DebugContext(ctx, "Received ExportLogsServiceRequest", "resourceLogs.size", len(request.ResourceLogs))
 
-	s.counter.count(request.ResourceLogs)
+	s.counter.count(ctx, request.ResourceLogs)
 
 	return &collogspb.ExportLogsServiceResponse{}, nil
+}
+
+func (s *dash0LogsServiceServer) startPrinter() {
+	// todo cancel when service shuts down
+	for range s.printTicker.C {
+		counts := s.counter.getAndReset()
+		s.printer.print(counts)
+	}
 }

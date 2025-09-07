@@ -8,8 +8,8 @@ didn't add due to time constraints.
 Following is needed:
 
 1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
-2. PR checks (tests, linters)
-3. Automatic releases (following a tag push for example)
+2. PR checks (tests, linters).
+3. Automatic releases (following a tag push for example).
 
 ## Shutdown/startup behavior
 
@@ -31,3 +31,6 @@ seconds it was up. That might be a problem if the person using the counting serv
 Even if that person is aware of that, the counts are partial, and hence do not provide the full picture.
 
 Summarizing everything, I'd rather not handle this behavior for now.
+
+
+## TODOs

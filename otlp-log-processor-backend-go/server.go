@@ -47,6 +47,7 @@ func run() (err error) {
 
 	cfg, err := parseConfig()
 	if err != nil {
+		fmt.Printf("Error parsing config: %v\n", err)
 		printHelp()
 		return nil
 	}
@@ -62,7 +63,14 @@ func run() (err error) {
 		grpc.MaxRecvMsgSize(cfg.maxReceiveMessageSize),
 		grpc.Creds(insecure.NewCredentials()),
 	)
-	collogspb.RegisterLogsServiceServer(grpcServer, newServer(cfg.attributeKey, cfg.countWindow))
+	collogspb.RegisterLogsServiceServer(
+		grpcServer,
+		newServer(
+			cfg.countWindow,
+			newInMemoryCounter(cfg.attributeKey),
+			newStdoutPrinter(),
+		),
+	)
 
 	slog.Debug("Starting gRPC server")
 
@@ -71,5 +79,5 @@ func run() (err error) {
 
 func printHelp() {
 	// todo pretty print the usage instructions
-	fmt.Println("Usage: ")
+	fmt.Println("Usage: TODO")
 }

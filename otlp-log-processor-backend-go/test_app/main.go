@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
@@ -18,6 +19,10 @@ var res = resource.NewWithAttributes(
 	semconv.ServiceNameKey.String("test-app"),
 	semconv.ServiceNamespaceKey.String("dash0-exercise"),
 	semconv.ServiceVersionKey.String("1.0.0"),
+	attribute.KeyValue{
+		Key:   "foo",
+		Value: attribute.StringValue("hello"),
+	},
 )
 
 func main() {
