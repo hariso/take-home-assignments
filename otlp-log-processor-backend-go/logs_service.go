@@ -11,11 +11,11 @@ import (
 
 type logsCounter interface {
 	count(context.Context, []*v1.ResourceLogs)
-	getAndReset() map[any]int64
+	getAndReset() map[string]int64
 }
 
 type countPrinter interface {
-	print(map[any]int64)
+	print(map[string]int64)
 }
 
 type dash0LogsServiceServer struct {

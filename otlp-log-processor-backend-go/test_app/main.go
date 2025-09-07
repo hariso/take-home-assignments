@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
+	"math/rand/v2"
+	"time"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/attribute"
@@ -20,8 +23,8 @@ var res = resource.NewWithAttributes(
 	semconv.ServiceNamespaceKey.String("dash0-exercise"),
 	semconv.ServiceVersionKey.String("1.0.0"),
 	attribute.KeyValue{
-		Key:   "foo",
-		Value: attribute.StringValue("hello"),
+		Key:   "resource-foo",
+		Value: attribute.StringValue("resource-hello"),
 	},
 )
 
@@ -48,12 +51,14 @@ func main() {
 	global.SetLoggerProvider(lp)
 
 	// Create slog.Logger that routes logs to OTel
-	logger := otelslog.NewLogger("my-service")
+	logger := otelslog.NewLogger("foo-service")
 
-	// Optionally set as default slog logger
-	slog.SetDefault(logger)
+	for range time.Tick(100 * time.Millisecond) {
+		if rand.Float64() < 0.5 {
+			logger.Info("logging with key foo", slog.String("foo", fmt.Sprintf("foo-value-%d", rand.IntN(3))))
+		} else {
 
-	// Both work and go to OTLP collector
-	logger.Info("hello from otelslog.NewLogger")
-	slog.Info("hello from slog default")
+			logger.Info("logging with key bar", slog.String("bar", fmt.Sprintf("bar-value-%d", rand.IntN(3))))
+		}
+	}
 }

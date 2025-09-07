@@ -10,7 +10,12 @@ import (
 	"go.opentelemetry.io/proto/otlp/logs/v1"
 )
 
-var logsReceivedCounter metric.Int64Counter
+var (
+	logsReceivedCounter metric.Int64Counter
+	unknownAttrKey      = &v2.AnyValue{
+		Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
+	}
+)
 
 func init() {
 	var err error
@@ -25,17 +30,15 @@ func init() {
 }
 
 type inMemoryCounter struct {
-	attrKey             string
-	counts              map[any]int64
-	m                   sync.Mutex
-	logsReceivedCounter metric.Int64Counter
+	attrKey string
+	counts  map[string]int64
+	m       sync.Mutex
 }
 
 func newInMemoryCounter(attrKey string) *inMemoryCounter {
 	return &inMemoryCounter{
-		attrKey:             attrKey,
-		logsReceivedCounter: logsReceivedCounter,
-		counts:              make(map[any]int64, 1000),
+		attrKey: attrKey,
+		counts:  make(map[string]int64, 1000),
 	}
 }
 
@@ -48,12 +51,12 @@ func (c *inMemoryCounter) count(ctx context.Context, resLogs []*v1.ResourceLogs)
 	}
 }
 
-func (c *inMemoryCounter) getAndReset() map[any]int64 {
+func (c *inMemoryCounter) getAndReset() map[string]int64 {
 	c.m.Lock()
 	defer c.m.Unlock()
 
 	counts := c.counts
-	c.counts = make(map[any]int64)
+	c.counts = make(map[string]int64)
 
 	return counts
 }
@@ -86,7 +89,7 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 		c.counts[resValue.GetStringValue()] += int64(count)
 		slog.DebugContext(ctx, "counted log records",
 			"resource", res.String(),
-			"attribute.value", resValue,
+			"attribute.value", resValue.GetStringValue(),
 			"logs.count", count,
 		)
 		return
@@ -115,10 +118,10 @@ func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLo
 	// record to override the otel.scope.name attribute from the scope).
 	if scopeVal != nil {
 		count := len(scopeLog.LogRecords)
-		c.counts[scopeVal] += int64(count)
+		c.counts[scopeVal.GetStringValue()] += int64(count)
 		slog.DebugContext(ctx, "counted log records",
 			"scope", scopeLog.Scope.String(),
-			"attribute.value", scopeVal,
+			"attribute.value", scopeVal.GetStringValue(),
 			"logs.count", count,
 		)
 
@@ -126,16 +129,14 @@ func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLo
 	}
 
 	for _, logRec := range scopeLog.LogRecords {
-		attrVal := &v2.AnyValue{
-			Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
-		}
+		attrVal := unknownAttrKey
 		for _, attr := range logRec.Attributes {
 			if attr.Key == c.attrKey {
 				attrVal = attr.Value
 			}
 		}
-		c.counts[attrVal]++
+		c.counts[attrVal.GetStringValue()]++
 	}
 
-	c.logsReceivedCounter.Add(ctx, int64(len(scopeLog.LogRecords)))
+	logsReceivedCounter.Add(ctx, int64(len(scopeLog.LogRecords)))
 }
