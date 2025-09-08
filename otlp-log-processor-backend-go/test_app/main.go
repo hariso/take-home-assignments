@@ -57,7 +57,6 @@ func main() {
 		if rand.Float64() < 0.5 {
 			logger.Info("logging with key foo", slog.String("foo", fmt.Sprintf("foo-value-%d", rand.IntN(3))))
 		} else {
-
 			logger.Info("logging with key bar", slog.String("bar", fmt.Sprintf("bar-value-%d", rand.IntN(3))))
 		}
 	}

@@ -59,7 +59,6 @@ func TestLogsServiceServer_Export(t *testing.T) {
 					t.Errorf("Out -> \nWant: %q\nGot : %q", tt.expected.out, out)
 				}
 			}
-
 		})
 	}
 }

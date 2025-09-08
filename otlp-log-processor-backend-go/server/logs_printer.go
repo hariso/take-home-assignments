@@ -20,5 +20,4 @@ func (s stdoutPrinter) print(counts map[string]int64) {
 	}
 
 	fmt.Println(b.String())
-
 }

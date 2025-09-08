@@ -12,11 +12,9 @@ import (
 	"go.opentelemetry.io/proto/otlp/logs/v1"
 )
 
-var (
-	unknownAttrKey = &v2.AnyValue{
-		Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
-	}
-)
+var unknownAttrKey = &v2.AnyValue{
+	Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
+}
 
 type inMemoryCounter struct {
 	attrKey string

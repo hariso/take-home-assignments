@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func main() {
-	err := server.Run()
+	err := server.Run(context.Background())
 	if err != nil {
 		log.Fatalln(fmt.Errorf("failed to run server: %w", err))
 	}

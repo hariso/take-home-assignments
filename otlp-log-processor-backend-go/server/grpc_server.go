@@ -17,15 +17,15 @@ import (
 
 const name = "dash0.com/otlp-log-processor-backend"
 
-func Run() error {
+func Run(ctx context.Context) error {
 	// Set up OpenTelemetry.
-	otelShutdown, err := telemetry.Setup(context.Background(), name)
+	otelShutdown, err := telemetry.Setup(ctx, name)
 	if err != nil {
 		return fmt.Errorf("error setting up OpenTelemetry: %w", err)
 	}
 	// Handle shutdown properly so nothing leaks.
 	defer func() {
-		err = errors.Join(err, otelShutdown(context.Background()))
+		err = errors.Join(err, otelShutdown(ctx))
 	}()
 
 	cfg, err := parseConfig()
