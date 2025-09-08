@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net"
 
@@ -24,33 +23,20 @@ var (
 	logger = otelslog.NewLogger(name)
 )
 
-func main() {
-	if err := run(); err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func run() (err error) {
+func run(cfg config) error {
 	slog.SetDefault(logger)
 	logger.Info("Starting application")
 
 	// Set up OpenTelemetry.
 	otelShutdown, err := setupOTelSDK(context.Background())
 	if err != nil {
-		return
+		return fmt.Errorf("error setting up OpenTelemetry: %w", err)
 	}
 
 	// Handle shutdown properly so nothing leaks.
 	defer func() {
 		err = errors.Join(err, otelShutdown(context.Background()))
 	}()
-
-	cfg, err := parseConfig()
-	if err != nil {
-		fmt.Printf("Error parsing config: %v\n", err)
-		printHelp()
-		return nil
-	}
 
 	slog.Debug("Starting listener", slog.String("listenAddr", cfg.listenAddr))
 	listener, err := net.Listen("tcp", cfg.listenAddr)
@@ -75,9 +61,4 @@ func run() (err error) {
 	slog.Debug("Starting gRPC server")
 
 	return grpcServer.Serve(listener)
-}
-
-func printHelp() {
-	// todo pretty print the usage instructions
-	fmt.Println("Usage: TODO")
 }

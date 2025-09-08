@@ -5,7 +5,7 @@ didn't add due to time constraints.
 
 ## GitHub setup
 
-Following is needed:
+The following is needed:
 
 1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
 2. PR checks (tests, linters).
@@ -32,5 +32,9 @@ Even if that person is aware of that, the counts are partial, and hence do not p
 
 Summarizing everything, I'd rather not handle this behavior for now.
 
-
 ## TODOs
+
+### Tests
+
+1. Use a random port when setting the gRPC service in server_integration_test.go.
+2. 
