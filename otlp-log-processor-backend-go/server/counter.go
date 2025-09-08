@@ -16,10 +16,17 @@ var unknownAttrKey = &v2.AnyValue{
 	Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
 }
 
+// inMemoryCounter is a logs' counter that stores the counts in memory.
 type inMemoryCounter struct {
+	// attrKey is the attribute key to use for counting.
 	attrKey string
-	counts  map[string]int64
-	m       sync.Mutex
+	// counts stores the counts for each resource/scope/attribute value.
+	// The key is the stringified attribute value, the value is the count.
+	counts      map[string]int64
+	countsMutex sync.Mutex
+
+	// TODO We can add more metrics, e.g. for the number of logs received by resource
+	// (so that we can have a better idea of the load on the system).
 
 	logsReceivedCounter metric.Int64Counter
 }
@@ -42,8 +49,8 @@ func newInMemoryCounter(attrKey string) *inMemoryCounter {
 }
 
 func (c *inMemoryCounter) count(ctx context.Context, resLogs []*v1.ResourceLogs) {
-	c.m.Lock()
-	defer c.m.Unlock()
+	c.countsMutex.Lock()
+	defer c.countsMutex.Unlock()
 
 	slog.DebugContext(ctx, "counting logs", "resourceLogs.size", len(resLogs))
 	for _, resLog := range resLogs {
@@ -52,8 +59,8 @@ func (c *inMemoryCounter) count(ctx context.Context, resLogs []*v1.ResourceLogs)
 }
 
 func (c *inMemoryCounter) getAndReset() map[string]int64 {
-	c.m.Lock()
-	defer c.m.Unlock()
+	c.countsMutex.Lock()
+	defer c.countsMutex.Unlock()
 
 	slog.Debug("getting and resetting counts")
 	counts := c.counts

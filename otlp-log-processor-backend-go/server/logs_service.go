@@ -9,7 +9,7 @@ import (
 	v1 "go.opentelemetry.io/proto/otlp/logs/v1"
 )
 
-//go:generate mockgen -typed -source=logs_service.go -destination=logs_counter_mock.go -package=server -mock_names=logsCounter=LogsCounter . logsCounter
+//go:generate mockgen -typed -source=logs_service.go -destination=counter_mock.go -package=server -mock_names=logsCounter=LogsCounter . logsCounter
 type logsCounter interface {
 	// count counts the logs in the given ResourceLogs.
 	count(context.Context, []*v1.ResourceLogs)
@@ -17,7 +17,7 @@ type logsCounter interface {
 	getAndReset() map[string]int64
 }
 
-//go:generate mockgen -typed -source=logs_service.go -destination=logs_printer_mock.go -package=server -mock_names=countPrinter=CountPrinter . countPrinter
+//go:generate mockgen -typed -source=logs_service.go -destination=printer_mock.go -package=server -mock_names=countPrinter=CountPrinter . countPrinter
 type countPrinter interface {
 	print(map[string]int64)
 }

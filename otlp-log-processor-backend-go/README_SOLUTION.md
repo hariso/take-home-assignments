@@ -9,12 +9,17 @@ The following is needed:
 
 1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
 2. PR checks (tests, linters).
-3. Automatic releases (following a tag-push for example).
+3. Automatic releases (following a tag push, for example).
 
 ## Makefile
 
 This solution adds a `Makefile` with a few useful targets, such as `make test` for running tests, and `make build`, for
 building the app.
+
+## Observability
+
+1. More metrics can be added so that we can watch the number of log records received, per resource/scope.
+2. Similarly, we should track the time needed to count records (per request/resource/scope).
 
 ## Shutdown/startup behavior
 
