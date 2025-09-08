@@ -36,7 +36,7 @@ var Resource = resource.NewWithAttributes(
 )
 
 // Setup bootstraps the OpenTelemetry pipeline.
-// If it does not return an error, make sure to call shutdown for proper cleanup.
+// If it doesRun not return an error, make sure to call shutdown for proper cleanup.
 func Setup(ctx context.Context, name string) (shutdown func(context.Context) error, err error) {
 	// TODO these global variables make testing a bit more difficult.
 	// We should have a dedicated method for testing.

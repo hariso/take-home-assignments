@@ -42,7 +42,7 @@ starts, we may choose to continue counting or reset counts to zero.
 
 This service is responsible for counting records it received, not the records that were sent (for whatever
 reason). From the counting service's point of view, it would make sense to handle shutdown and startup behavior (by
-pausing counting when the service shuts down, and resuming when it starts up).
+pausing counting when the service shuts down and resuming when it starts up).
 
 ### Cons 
 

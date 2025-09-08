@@ -17,6 +17,7 @@ import (
 
 const name = "dash0.com/otlp-log-processor-backend"
 
+// Run runs the gRPC server.
 func Run(ctx context.Context) error {
 	otelShutdown, err := telemetry.Setup(ctx, name)
 	if err != nil {
@@ -70,11 +71,11 @@ func printHelp() {
 
 Flags:
   -listenAddr string
-        The listen address (default "localhost:4317")
+        The address to listen on for gRPC requests (default "localhost:4317").
   -maxReceiveMessageSize int
-        The max message size in bytes the server can receive (default 16777216)
+        The max message size in bytes the server can receive (default 16777216).
   -attributeKey string
-        Attribute key for which the numbers of distinct values should be tracked (REQUIRED)
+        (REQUIRED) Attribute key for which the numbers of distinct values should be tracked.
   -countWindow duration
         Duration of the time window after which the number of distinct values of attributeKey will be printed (default 10s)`,
 	)

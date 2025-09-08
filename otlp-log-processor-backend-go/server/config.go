@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// config holds the app's configuration, parsed using all configuration sources.
+// Currently, it's just a set of command line flags.
 type config struct {
 	listenAddr            string
 	maxReceiveMessageSize int
@@ -18,7 +20,7 @@ var (
 	listenAddr = flag.String(
 		"listenAddr",
 		"localhost:4317",
-		"The listen address",
+		"The address to listen on for gRPC requests.",
 	)
 	maxReceiveMessageSize = flag.Int(
 		"maxReceiveMessageSize",
