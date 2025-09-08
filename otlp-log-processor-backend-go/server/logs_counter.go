@@ -45,6 +45,7 @@ func (c *inMemoryCounter) count(ctx context.Context, resLogs []*v1.ResourceLogs)
 	c.m.Lock()
 	defer c.m.Unlock()
 
+	slog.DebugContext(ctx, "counting logs", "resourceLogs.size", len(resLogs))
 	for _, resLog := range resLogs {
 		c.countInResource(ctx, resLog)
 	}
@@ -54,6 +55,7 @@ func (c *inMemoryCounter) getAndReset() map[string]int64 {
 	c.m.Lock()
 	defer c.m.Unlock()
 
+	slog.Debug("getting and resetting counts")
 	counts := c.counts
 	c.counts = make(map[string]int64)
 
@@ -70,6 +72,8 @@ func (c *inMemoryCounter) countAllLogRecords(slogs []*v1.ScopeLogs) int {
 }
 
 func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.ResourceLogs) {
+	slog.Debug("counting logs in resource", "resource.name", resLog.Resource.String())
+
 	var resValue *v2.AnyValue
 	// Get the attribute value from the resource, if present.
 	for _, attr := range resLog.Resource.Attributes {
@@ -86,7 +90,7 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 	if resValue != nil {
 		count := c.countAllLogRecords(resLog.ScopeLogs)
 		c.counts[resValue.GetStringValue()] += int64(count)
-		slog.DebugContext(ctx, "counted log records",
+		slog.DebugContext(ctx, "attribute found on resource, counted log records",
 			"resource", telemetry.Resource.String(),
 			"attribute.value", resValue.GetStringValue(),
 			"logs.count", count,
@@ -101,6 +105,8 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 }
 
 func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLogs) {
+	slog.Debug("counting logs in scope", "scope.name", scopeLog.Scope.String())
+
 	// Get the attribute value from the scope, if present.
 	// If not present, we take the attribute's value from the resource
 	var scopeVal *v2.AnyValue
@@ -118,7 +124,7 @@ func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLo
 	if scopeVal != nil {
 		count := len(scopeLog.LogRecords)
 		c.counts[scopeVal.GetStringValue()] += int64(count)
-		slog.DebugContext(ctx, "counted log records",
+		slog.DebugContext(ctx, "attribute found on scope, counted log records",
 			"scope", scopeLog.Scope.String(),
 			"attribute.value", scopeVal.GetStringValue(),
 			"logs.count", count,

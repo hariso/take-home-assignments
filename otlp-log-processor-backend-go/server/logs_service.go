@@ -30,7 +30,7 @@ type dash0LogsServiceServer struct {
 	collogspb.UnimplementedLogsServiceServer
 }
 
-func newServer(countWindow time.Duration, counter logsCounter, printer countPrinter) collogspb.LogsServiceServer {
+func newLogsServiceServer(countWindow time.Duration, counter logsCounter, printer countPrinter) collogspb.LogsServiceServer {
 	s := &dash0LogsServiceServer{
 		printTicker: time.NewTicker(countWindow),
 		counter:     counter,

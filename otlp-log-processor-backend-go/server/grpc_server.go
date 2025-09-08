@@ -18,19 +18,17 @@ import (
 const name = "dash0.com/otlp-log-processor-backend"
 
 func Run(ctx context.Context) error {
-	// Set up OpenTelemetry.
 	otelShutdown, err := telemetry.Setup(ctx, name)
 	if err != nil {
 		return fmt.Errorf("error setting up OpenTelemetry: %w", err)
 	}
-	// Handle shutdown properly so nothing leaks.
 	defer func() {
 		err = errors.Join(err, otelShutdown(ctx))
 	}()
 
 	cfg, err := parseConfig()
 	if err != nil {
-		fmt.Printf("Error parsing config: %v\n", err)
+		slog.ErrorContext(ctx, "error parsing config", "err", err)
 		printHelp()
 		os.Exit(1)
 	}
@@ -38,7 +36,7 @@ func Run(ctx context.Context) error {
 	slog.Debug("Starting listener", slog.String("listenAddr", cfg.listenAddr))
 	listener, err := net.Listen("tcp", cfg.listenAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listening at %v: %w", cfg.listenAddr, err)
 	}
 
 	grpcServer := grpc.NewServer(
@@ -48,7 +46,7 @@ func Run(ctx context.Context) error {
 	)
 	collogspb.RegisterLogsServiceServer(
 		grpcServer,
-		newServer(
+		newLogsServiceServer(
 			cfg.countWindow,
 			newInMemoryCounter(cfg.attributeKey),
 			newStdoutPrinter(),
@@ -57,10 +55,27 @@ func Run(ctx context.Context) error {
 
 	slog.Debug("Starting gRPC server")
 
-	return grpcServer.Serve(listener)
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		return fmt.Errorf("error serving gRPC server: %w", err)
+	}
+
+	return nil
 }
 
 func printHelp() {
-	// todo pretty print the usage instructions
-	fmt.Println("Usage: TODO")
+	fmt.Println(
+		`Usage:
+  otlp-log-processor-backend [flags]
+
+Flags:
+  -listenAddr string
+        The listen address (default "localhost:4317")
+  -maxReceiveMessageSize int
+        The max message size in bytes the server can receive (default 16777216)
+  -attributeKey string
+        Attribute key for which the numbers of distinct values should be tracked (REQUIRED)
+  -countWindow duration
+        Duration of the time window after which the number of distinct values of attributeKey will be printed (default 10s)`,
+	)
 }

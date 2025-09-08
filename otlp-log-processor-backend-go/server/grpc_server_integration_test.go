@@ -71,7 +71,7 @@ func server() (collogspb.LogsServiceClient, func()) {
 	baseServer := grpc.NewServer()
 	collogspb.RegisterLogsServiceServer(
 		baseServer,
-		newServer(
+		newLogsServiceServer(
 			10*time.Second,
 			newInMemoryCounter("foo"),
 			newStdoutPrinter(),

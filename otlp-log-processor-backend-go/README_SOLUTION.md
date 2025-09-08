@@ -9,7 +9,12 @@ The following is needed:
 
 1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
 2. PR checks (tests, linters).
-3. Automatic releases (following a tag push for example).
+3. Automatic releases (following a tag-push for example).
+
+## Makefile
+
+This solution adds a `Makefile` with a few useful targets, such as `make test` for running tests, and `make build`, for
+building the app.
 
 ## Shutdown/startup behavior
 

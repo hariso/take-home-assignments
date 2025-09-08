@@ -20,7 +20,7 @@ func TestLogsServiceServer_Export_CountPrint_EmptyRequest(t *testing.T) {
 
 	counter := NewLogsCounter(ctrl)
 	printer := NewCountPrinter(ctrl)
-	underTest := newServer(testCountWindow, counter, printer)
+	underTest := newLogsServiceServer(testCountWindow, counter, printer)
 
 	req := &collogspb.ExportLogsServiceRequest{}
 	counter.EXPECT().count(ctx, req.ResourceLogs).Return()
