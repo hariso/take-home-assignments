@@ -12,7 +12,7 @@ func TestParseConfig(t *testing.T) {
 	is := is.New(t)
 
 	originalArgs := os.Args
-	os.Args = []string{originalArgs[0], "--countWindow=12s"}
+	os.Args = []string{originalArgs[0], "-countWindow=12s", "-attributeKey=foo"}
 	defer func() {
 		os.Args = originalArgs
 	}()

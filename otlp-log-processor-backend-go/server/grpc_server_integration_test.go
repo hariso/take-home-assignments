@@ -9,6 +9,7 @@ import (
 
 	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	otellogs "go.opentelemetry.io/proto/otlp/logs/v1"
+	resourcev1 "go.opentelemetry.io/proto/otlp/resource/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -33,6 +34,7 @@ func TestLogsServiceServer_Export(t *testing.T) {
 			in: &collogspb.ExportLogsServiceRequest{
 				ResourceLogs: []*otellogs.ResourceLogs{
 					{
+						Resource:  &resourcev1.Resource{},
 						ScopeLogs: []*otellogs.ScopeLogs{},
 						SchemaUrl: "dash0.com/otlp-log-processor-backend",
 					},

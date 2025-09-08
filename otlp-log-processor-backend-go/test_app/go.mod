@@ -1,6 +1,6 @@
 module test_app
 
-go 1.23.0
+go 1.23.4
 
 require (
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0

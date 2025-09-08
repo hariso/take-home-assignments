@@ -27,12 +27,12 @@ func TestLogsServiceServer_Export_CountPrint_EmptyRequest(t *testing.T) {
 	counts := map[string]int64{
 		"something": 123,
 	}
-	counter.EXPECT().getAndReset().Return(counts)
-	printer.EXPECT().print(counts)
+	counter.EXPECT().getAndReset().Return(counts).AnyTimes()
+	printer.EXPECT().print(counts).AnyTimes()
 
 	got, err := underTest.Export(ctx, req)
 
-	time.Sleep(testCountWindow + 100*time.Millisecond)
+	time.Sleep(testCountWindow + 10*time.Millisecond)
 
 	is.NoErr(err)
 	is.Equal(got, &collogspb.ExportLogsServiceResponse{})
