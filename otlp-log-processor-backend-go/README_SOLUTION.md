@@ -16,10 +16,22 @@ The following is needed:
 This solution adds a `Makefile` with a few useful targets, such as `make test` for running tests, and `make build`, for
 building the app.
 
+## Test app
+
+In the [`test_app`](/test_app) folder, there's a test application that can be used to test the counting service. To run
+it, execute `go run main.go`
+
 ## Observability
 
 1. More metrics can be added so that we can watch the number of log records received, per resource/scope.
 2. Similarly, we should track the time needed to count records (per request/resource/scope).
+
+## Tests
+
+More tests should be added. Examples would be:
+
+1. More benchmark tests (e.g., tests with many requests).
+2. More tests for the counter, printer, config.
 
 ## Shutdown/startup behavior
 
@@ -42,9 +54,3 @@ Even if that person is aware of that, the counts are partial, and hence do not p
 
 Summarizing everything, I'd rather not handle this behavior for now.
 
-## TODOs
-
-### Tests
-
-1. Use a random port when setting the gRPC service in server_integration_test.go.
-2. 
