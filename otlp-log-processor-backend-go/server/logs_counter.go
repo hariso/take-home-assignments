@@ -1,44 +1,45 @@
-package main
+package server
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 
+	"dash0.com/otlp-log-processor-backend/telemetry"
 	"go.opentelemetry.io/otel/metric"
 	v2 "go.opentelemetry.io/proto/otlp/common/v1"
 	"go.opentelemetry.io/proto/otlp/logs/v1"
 )
 
 var (
-	logsReceivedCounter metric.Int64Counter
-	unknownAttrKey      = &v2.AnyValue{
+	unknownAttrKey = &v2.AnyValue{
 		Value: &v2.AnyValue_StringValue{StringValue: "unknown"},
 	}
 )
-
-func init() {
-	var err error
-	logsReceivedCounter, err = meter.Int64Counter(
-		"com.dash0.homeexercise.logs.received",
-		metric.WithDescription("The number of logs received by otlp-log-processor-backend"),
-		metric.WithUnit("{log}"),
-	)
-	if err != nil {
-		panic(err)
-	}
-}
 
 type inMemoryCounter struct {
 	attrKey string
 	counts  map[string]int64
 	m       sync.Mutex
+
+	logsReceivedCounter metric.Int64Counter
 }
 
 func newInMemoryCounter(attrKey string) *inMemoryCounter {
+	logsReceivedCounter, err := telemetry.Meter.Int64Counter(
+		"com.dash0.homeexercise.logs.received",
+		metric.WithDescription("The number of logs received by otlp-log-processor-backend"),
+		metric.WithUnit("{log}"),
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to create logs received counter: %w", err))
+	}
+
 	return &inMemoryCounter{
-		attrKey: attrKey,
-		counts:  make(map[string]int64, 1000),
+		attrKey:             attrKey,
+		counts:              make(map[string]int64, 1000),
+		logsReceivedCounter: logsReceivedCounter,
 	}
 }
 
@@ -88,7 +89,7 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 		count := c.countAllLogRecords(resLog.ScopeLogs)
 		c.counts[resValue.GetStringValue()] += int64(count)
 		slog.DebugContext(ctx, "counted log records",
-			"resource", res.String(),
+			"resource", telemetry.Resource.String(),
 			"attribute.value", resValue.GetStringValue(),
 			"logs.count", count,
 		)
@@ -138,5 +139,5 @@ func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLo
 		c.counts[attrVal.GetStringValue()]++
 	}
 
-	logsReceivedCounter.Add(ctx, int64(len(scopeLog.LogRecords)))
+	c.logsReceivedCounter.Add(ctx, int64(len(scopeLog.LogRecords)))
 }

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"os"
 
-	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"dash0.com/otlp-log-processor-backend/telemetry"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -17,26 +17,23 @@ import (
 
 const name = "dash0.com/otlp-log-processor-backend"
 
-var (
-	tracer = otel.Tracer(name)
-	meter  = otel.Meter(name)
-	logger = otelslog.NewLogger(name)
-)
-
-func run(cfg config) error {
-	slog.SetDefault(logger)
-	logger.Info("Starting application")
-
+func Run() error {
 	// Set up OpenTelemetry.
-	otelShutdown, err := setupOTelSDK(context.Background())
+	otelShutdown, err := telemetry.Setup(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("error setting up OpenTelemetry: %w", err)
 	}
-
 	// Handle shutdown properly so nothing leaks.
 	defer func() {
 		err = errors.Join(err, otelShutdown(context.Background()))
 	}()
+
+	cfg, err := parseConfig()
+	if err != nil {
+		fmt.Printf("Error parsing config: %v\n", err)
+		printHelp()
+		os.Exit(1)
+	}
 
 	slog.Debug("Starting listener", slog.String("listenAddr", cfg.listenAddr))
 	listener, err := net.Listen("tcp", cfg.listenAddr)
@@ -61,4 +58,9 @@ func run(cfg config) error {
 	slog.Debug("Starting gRPC server")
 
 	return grpcServer.Serve(listener)
+}
+
+func printHelp() {
+	// todo pretty print the usage instructions
+	fmt.Println("Usage: TODO")
 }

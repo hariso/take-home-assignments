@@ -1,33 +1,48 @@
-package main
+package telemetry
 
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/log"
-	"go.opentelemetry.io/otel/sdk/metric"
+	otelsdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+	otelsdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
-var res = resource.NewWithAttributes(
+var (
+	Tracer trace.Tracer
+	Meter  metric.Meter
+	Logger *slog.Logger
+)
+
+var Resource = resource.NewWithAttributes(
 	semconv.SchemaURL,
 	semconv.ServiceNameKey.String("otlp-log-processor-backend"),
 	semconv.ServiceNamespaceKey.String("dash0-exercise"),
 	semconv.ServiceVersionKey.String("1.0.0"),
 )
 
-// setupOTelSDK bootstraps the OpenTelemetry pipeline.
+// Setup bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func setupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, err error) {
+func Setup(ctx context.Context, name string) (shutdown func(context.Context) error, err error) {
+	Tracer = otel.Tracer(name)
+	Meter = otel.Meter(name)
+	Logger = otelslog.NewLogger(name)
+	slog.SetDefault(Logger)
+
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -88,35 +103,37 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
+func newTraceProvider() (*otelsdktrace.TracerProvider, error) {
 	traceExporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, err
 	}
 
-	traceProvider := trace.NewTracerProvider(
-		trace.WithResource(res),
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithBatcher(traceExporter,
+	traceProvider := otelsdktrace.NewTracerProvider(
+		otelsdktrace.WithResource(Resource),
+		otelsdktrace.WithSampler(otelsdktrace.AlwaysSample()),
+		otelsdktrace.WithBatcher(traceExporter,
 			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
+			otelsdktrace.WithBatchTimeout(time.Second),
+		),
 	)
 	return traceProvider, nil
 }
 
-func newMeterProvider() (*metric.MeterProvider, error) {
+func newMeterProvider() (*otelsdkmetric.MeterProvider, error) {
 	metricExporter, err := stdoutmetric.New(stdoutmetric.WithPrettyPrint())
 	if err != nil {
 		return nil, err
 	}
 
-	meterProvider := metric.NewMeterProvider(
-		metric.WithResource(res),
-		metric.WithReader(
-			metric.NewPeriodicReader(metricExporter,
+	meterProvider := otelsdkmetric.NewMeterProvider(
+		otelsdkmetric.WithResource(Resource),
+		otelsdkmetric.WithReader(
+			otelsdkmetric.NewPeriodicReader(metricExporter,
 				// Default is 1m. Set to 10s for demonstrative purposes.
-				metric.WithInterval(10*time.Second))),
+				otelsdkmetric.WithInterval(10*time.Second)),
+		),
 	)
 	return meterProvider, nil
 }
@@ -128,7 +145,7 @@ func newLoggerProvider() (*log.LoggerProvider, error) {
 	}
 
 	loggerProvider := log.NewLoggerProvider(
-		log.WithResource(res),
+		log.WithResource(Resource),
 		log.WithProcessor(log.NewBatchProcessor(logExporter)),
 	)
 	return loggerProvider, nil

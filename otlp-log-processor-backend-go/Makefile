@@ -1,13 +1,7 @@
-# Version will extract the current version of the app based on
-# the latest git tag and commit. If the repository contains any
-# changes the version will have the suffix "-dirty", it will
-# ignore any untracked files though to ensure Docker builds have
-# the correct version.
-
 # The build target should stay at the top since we want it to be the default target.
 .PHONY: build
 build:
-	go build -o otlp-log-processor ./main.go
+	go build -o otlp-log-processor-backend ./main.go
 
 .PHONY: test
 test:

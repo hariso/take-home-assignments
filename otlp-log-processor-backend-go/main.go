@@ -3,24 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
+
+	"dash0.com/otlp-log-processor-backend/server"
 )
 
 func main() {
-	cfg, err := parseConfig()
+	err := server.Run()
 	if err != nil {
-		fmt.Printf("Error parsing config: %v\n", err)
-		printHelp()
-		os.Exit(1)
+		log.Fatalln(fmt.Errorf("failed to run server: %w", err))
 	}
-
-	err = run(cfg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func printHelp() {
-	// todo pretty print the usage instructions
-	fmt.Println("Usage: TODO")
 }
