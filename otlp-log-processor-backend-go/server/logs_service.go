@@ -63,6 +63,10 @@ func (s *dash0LogsServiceServer) startPrinter() {
 	for range s.printTicker.C {
 		slog.Debug("printing counts")
 		counts := s.counter.getAndReset()
+		// TODO Currently, the print() method doesn't return any errors,
+		// since the only impl. we have writes to std. out.
+		// We might want to print/export the counts to another location,
+		// in which case we'll want to add retries.
 		s.printer.print(counts)
 	}
 }

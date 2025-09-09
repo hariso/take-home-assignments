@@ -3,23 +3,15 @@
 This document is a collection of notes about the solution, such as things that I consider worth adding, but that I
 didn't add due to time constraints.
 
-## GitHub setup
-
-The following is needed:
-
-1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
-2. PR checks (tests, linters).
-3. Automatic releases (following a tag push, for example).
-
 ## Makefile
 
 This solution adds a `Makefile` with a few useful targets, such as `make test` for running tests, and `make build`, for
 building the app.
 
-## Test app
+## Configuration
 
-In the [`test_app`](/test_app) folder, there's a test application that can be used to test the counting service. To run
-it, execute `go run main.go`. It runs a loop that emits records with a few random attributes.
+Currently, configuration is provided via CLI flags. The code is flexible enough to also allow configuration via env.
+variable and/or configuration files.
 
 ## Observability
 
@@ -28,6 +20,11 @@ The following is worth adding:
 1. More metrics can be added so that we can watch the number and size of log records received, per resource/scope.
 2. Time needed to count records (per request/resource/scope).
 3. A health check endpoint.
+
+## Test app
+
+In the [`test_app`](/test_app) folder, there's a test application that can be used to test the counting service. To run
+it, execute `go run main.go`. It runs a loop that emits records with a few random attributes.
 
 ## Tests
 
@@ -51,3 +48,11 @@ Not having any counts at all makes it very clear that something happened to the 
 
 Summarizing everything: IMHO, it's better not show any partial counts, since more often than not, the user will want to
 see the full counts.
+
+## GitHub setup
+
+The following is needed:
+
+1. Dependabot configuration, together with automatically merging PRs that perform minor upgrades.
+2. PR checks (tests, linters).
+3. Automatic releases (following a tag push, for example).
