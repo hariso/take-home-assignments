@@ -52,7 +52,7 @@ func (c *inMemoryCounter) count(ctx context.Context, resLogs []*v1.ResourceLogs)
 	c.countsMutex.Lock()
 	defer c.countsMutex.Unlock()
 
-	slog.DebugContext(ctx, "counting logs", "resourceLogs.size", len(resLogs))
+	slog.DebugContext(ctx, "counting logs in request", "resourceLogs.size", len(resLogs))
 	for _, resLog := range resLogs {
 		c.countInResource(ctx, resLog)
 	}
@@ -69,20 +69,11 @@ func (c *inMemoryCounter) getAndReset() map[string]int64 {
 	return counts
 }
 
-func (c *inMemoryCounter) countAllLogRecords(slogs []*v1.ScopeLogs) int {
-	var count int
-	for _, l := range slogs {
-		count += len(l.LogRecords)
-	}
-
-	return count
-}
-
 func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.ResourceLogs) {
 	slog.Debug("counting logs in resource", "resource.name", resLog.Resource.String())
 
-	var resValue *v2.AnyValue
 	// Get the attribute value from the resource, if present.
+	var resValue *v2.AnyValue
 	for _, attr := range resLog.Resource.Attributes {
 		if attr.Key == c.attrKey {
 			resValue = attr.Value
@@ -92,8 +83,8 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 	// Attribute found on resource.
 	// We consider that the value is "inherited" to all the logs coming from this resource.
 	// We do not handle the case where the attribute is overridden in scope attributes or
-	// log record attributes, as it's not a usual thing to do (e.g. it's unusual for a log
-	// record to override the service.name attribute from the resource).
+	// log record attributes, as it's not a usual thing to do. For example, it would be unusual
+	// for a log record to override the service.name attribute from the resource).
 	if resValue != nil {
 		count := c.countAllLogRecords(resLog.ScopeLogs)
 		c.counts[resValue.GetStringValue()] += int64(count)
@@ -102,6 +93,8 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 			"attribute.value", resValue.GetStringValue(),
 			"logs.count", count,
 		)
+
+		c.logsReceivedCounter.Add(ctx, int64(count))
 		return
 	}
 
@@ -109,6 +102,17 @@ func (c *inMemoryCounter) countInResource(ctx context.Context, resLog *v1.Resour
 	for _, scopeLog := range resLog.ScopeLogs {
 		c.countInScope(ctx, scopeLog)
 	}
+}
+
+// countAllLogRecords counts the number of ALL log records in the given list of scope logs.
+// No filtering (by attribute value) is done.
+func (c *inMemoryCounter) countAllLogRecords(slogs []*v1.ScopeLogs) int {
+	var count int
+	for _, l := range slogs {
+		count += len(l.LogRecords)
+	}
+
+	return count
 }
 
 func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLogs) {
@@ -137,9 +141,11 @@ func (c *inMemoryCounter) countInScope(ctx context.Context, scopeLog *v1.ScopeLo
 			"logs.count", count,
 		)
 
+		c.logsReceivedCounter.Add(ctx, int64(len(scopeLog.LogRecords)))
 		return
 	}
 
+	// We need to check the attribute value on each log record.
 	for _, logRec := range scopeLog.LogRecords {
 		attrVal := unknownAttrKey
 		for _, attr := range logRec.Attributes {

@@ -59,7 +59,7 @@ func (s *dash0LogsServiceServer) Export(ctx context.Context, request *collogspb.
 
 func (s *dash0LogsServiceServer) startPrinter() {
 	slog.Debug("starting printer")
-	// todo cancel when service shuts down
+	// todo this runs in a goroutine, cancel when service shuts down
 	for range s.printTicker.C {
 		slog.Debug("printing counts")
 		counts := s.counter.getAndReset()

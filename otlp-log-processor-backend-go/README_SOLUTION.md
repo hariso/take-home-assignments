@@ -19,38 +19,35 @@ building the app.
 ## Test app
 
 In the [`test_app`](/test_app) folder, there's a test application that can be used to test the counting service. To run
-it, execute `go run main.go`
+it, execute `go run main.go`. It runs a loop that emits records with a few random attributes.
 
 ## Observability
 
-1. More metrics can be added so that we can watch the number of log records received, per resource/scope.
-2. Similarly, we should track the time needed to count records (per request/resource/scope).
+The following is worth adding:
+
+1. More metrics can be added so that we can watch the number and size of log records received, per resource/scope.
+2. Time needed to count records (per request/resource/scope).
+3. A health check endpoint.
 
 ## Tests
 
 More tests should be added. Examples would be:
 
-1. More benchmark tests (e.g., tests with many requests).
+1. More benchmark tests (e.g., tests with many requests). Tests should be added for both, `dash0LogsServiceServer` and
+   the `counter` struct.
 2. More tests for the counter, printer, config.
 
 ## Shutdown/startup behavior
 
-This is about handling the counting service's shutdown and start-up, and how it affects counting logs. After the service
-starts, we may choose to continue counting or reset counts to zero.
+This is about handling the counting service's shutdown and start-up, and how it affects counting logs. Generally
+speaking, a service will want to save its progress when shutting down and resume it when starting up. When the logs'
+service shuts down, we can save the attribute value counts and resume counting when it starts up.
 
-### Pros
+In this particular case, that would mean that partial counts are shown to a user. That's not always desirable. In cases
+when it is possible to use partial counts, a user needs to be able to know that's the case. The logs counting service
+can do that (e.g., by printing "these counts might be partial", or setting a "partial" flag in the response).
 
-This service is responsible for counting records it received, not the records that were sent (for whatever
-reason). From the counting service's point of view, it would make sense to handle shutdown and startup behavior (by
-pausing counting when the service shuts down and resuming when it starts up).
+Not having any counts at all makes it very clear that something happened to the service.
 
-### Cons 
-
-It might give the wrong impression that everything is OK. Let's assume the counting window is 10 seconds,
-and the service was down for 7 seconds. If we handle the shutdown, the counting service will show counts for the 3
-seconds it was up. That might be a problem if the person using the counting service isn't aware of that.
-
-Even if that person is aware of that, the counts are partial, and hence do not provide the full picture.
-
-Summarizing everything, I'd rather not handle this behavior for now.
-
+Summarizing everything: IMHO, it's better not show any partial counts, since more often than not, the user will want to
+see the full counts.

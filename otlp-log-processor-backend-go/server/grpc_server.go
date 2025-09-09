@@ -19,14 +19,16 @@ const name = "dash0.com/otlp-log-processor-backend"
 
 // Run runs the gRPC server.
 func Run(ctx context.Context) error {
+	// Set up OpenTelemetry.
 	otelShutdown, err := telemetry.Setup(ctx, name)
 	if err != nil {
-		return fmt.Errorf("error setting up OpenTelemetry: %w", err)
+		return fmt.Errorf("error setting up telemetry: %w", err)
 	}
 	defer func() {
 		err = errors.Join(err, otelShutdown(ctx))
 	}()
 
+	// Parse config.
 	cfg, err := parseConfig()
 	if err != nil {
 		slog.ErrorContext(ctx, "error parsing config", "err", err)
@@ -34,6 +36,7 @@ func Run(ctx context.Context) error {
 		os.Exit(1)
 	}
 
+	// Run the gRPC server.
 	slog.Debug("Starting listener", slog.String("listenAddr", cfg.listenAddr))
 	listener, err := net.Listen("tcp", cfg.listenAddr)
 	if err != nil {
